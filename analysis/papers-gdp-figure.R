@@ -117,7 +117,7 @@ ggplot(d_yearly) +
   labs(x = expression('Yearly GDP (trillion USD,'~log[10]~'scale)'),
        y = 'Number of papers')
 
-ggsave('papers-gdp.png', width = 6, height = 6, dpi = 600)
+ggsave('figures/papers-gdp.png', width = 6, height = 6, dpi = 600)
 
 # papers with new empirical data
 ggplot(d_yearly_newd) +
@@ -129,7 +129,7 @@ ggplot(d_yearly_newd) +
   labs(x = expression('Yearly GDP (trillion USD,'~log[10]~'scale)'),
        y = 'Number of papers with new empirical data')
 
-ggsave('papers-gdp-new-empirical-data.png', width = 6, height = 6, dpi = 600)
+ggsave('figures/papers-gdp-new-empirical-data.png', width = 6, height = 6, dpi = 600)
 
 # assuming GDP for 2018 is representative (pre-covid, mid-time series) ----
 d_2018 <-
