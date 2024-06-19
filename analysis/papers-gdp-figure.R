@@ -49,6 +49,13 @@ d_yearly <-
             by = c('country' = 'Country.Name', 'year')) %>%
   mutate(country = factor(country))
 
+# check total papers per country across years
+d %>%
+  group_by(country) %>%
+  summarise(n = sum(n_papers)) %>%
+  ungroup() %>%
+  arrange(desc(n))
+
 # missing US GDP in 2023
 # GDP estimate: https://www.bea.gov/news/2024/gross-domestic-product-fourth-quarter-and-year-2023-second-estimate
 # population estimate: https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
