@@ -50,7 +50,7 @@ d_yearly <-
   mutate(country = factor(country))
 
 # check total papers per country across years
-d %>%
+d_yearly %>%
   group_by(country) %>%
   summarise(n = sum(n_papers)) %>%
   ungroup() %>%
