@@ -1,25 +1,3 @@
-# MIT License
-# 
-# Copyright (c) 2024 Stefano Mezzini
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#   
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 library('mgcv') # for GAMs
 library('dplyr') # for data wrangling
 library('tidyr') # for data wrangling
@@ -94,7 +72,67 @@ mean(obs_by_country == 1)
 # ~40% of observations are 1
 mean(d$n == 1)
 
-# fit HGAMs ----
+# models that do accounts for population ----
+m <-
+  gam(n ~ s(log10(gdp), k = 5) + s(country, bs = 're'),
+      family = poisson(link = 'log'),
+      data = d,
+      method = 'REML')
+#' *figure S4*
+appraise(m, method = 'simulate', n_simulate = 1e4)
+ggsave('figures/model-diagn-all-data.png', height = 15.89, width = 20.06)
+draw(m, residuals = TRUE)
+
+m_newd <-
+  gam(n_newd ~ s(log10(gdp), k = 5) + s(country, bs = 're'),
+      family = poisson(link = 'log'),
+      data = d,
+      subset = n_newd > 0,
+      method = 'REML')
+#' *figure S5*
+appraise(m_newd, method = 'simulate', n_simulate = 1e4)
+ggsave('figures/model-diagn-new-data-only.png', height = 15.89, width = 20.06)
+draw(m_newd, residuals = TRUE)
+
+# make predictions ----
+newd <- tibble(gdp = 10^seq(10, 13.5, length.out = 400),
+               country = 'new country')
+preds <- bind_rows(
+  bind_cols(newd,
+            predict(m, newdata = newd, type = 'link', se.fit = TRUE,
+                    unconditional = TRUE) %>%
+              as.data.frame() %>%
+              transmute(mu = exp(fit),
+                        lwr = exp(fit - 1.96 * se.fit),
+                        upr = exp(fit + 1.96 * se.fit),
+                        data = 'All publications')),
+  bind_cols(newd,
+            predict(m_newd, newdata = newd, type = 'link', se.fit = TRUE,
+                    unconditional = TRUE) %>%
+              as.data.frame() %>%
+              transmute(mu = exp(fit),
+                        lwr = exp(fit - 1.96 * se.fit),
+                        upr = exp(fit + 1.96 * se.fit),
+                        data = 'Publications with new data only')))
+
+# plot the predictions ----
+pivot_longer(d, c(n, n_newd)) %>%
+  mutate(data = case_when(name == 'n' ~ 'All publications',
+                          name == 'n_newd' ~ 'Publications with new data only')) %>%
+  filter(value > 0) %>%
+  ggplot() +
+  facet_wrap(~ data) +
+  geom_ribbon(aes(gdp / 1e12, ymin = lwr, ymax = upr), preds, alpha = 0.3)+
+  geom_point(aes(gdp / 1e12, value), alpha = 0.3) +
+  geom_line(aes(gdp / 1e12, mu), preds) +
+  scale_x_log10() +
+  labs(x = expression('Yearly GDP (trillion USD,'~log[10]~'scale)'),
+       y = 'Number of publications')
+
+#' *figure 3*
+ggsave('figures/papers-gdp.png', width = 12, height = 6, dpi = 600)
+
+# fit HGAMs of papers per 1M people ----
 m <-
   gam(n_1e6_pop ~ s(gdp_capita, k = 10) + s(country, bs = 're'),
       family = Gamma(link = 'log'),
@@ -147,4 +185,5 @@ pivot_longer(d, cols = c(n_1e6_pop, n_newd_1e6_pop),
   labs(x = 'Yearly GDP per capita (thousands of USD)',
        y = 'Number of publications per million people')
 
-ggsave('figures/papers-gdp.png', width = 8, height = 4, dpi = 600)
+#' *figure S3*
+ggsave('figures/papers-1e6-people-gdp.png', width = 8, height = 4, dpi = 600)
