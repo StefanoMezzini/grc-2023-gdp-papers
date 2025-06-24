@@ -130,7 +130,7 @@ pivot_longer(d, c(n, n_newd)) %>%
        y = 'Number of publications')
 
 #' *figure 3*
-ggsave('figures/papers-gdp.png', width = 12, height = 6, dpi = 600)
+ggsave('figures/papers-gdp.png', width = 8, height = 4, dpi = 600)
 
 # fit HGAMs of papers per 1M people ----
 m <-
