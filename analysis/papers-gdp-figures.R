@@ -125,7 +125,7 @@ pivot_longer(d, c(n, n_newd)) %>%
   geom_ribbon(aes(gdp / 1e12, ymin = lwr, ymax = upr), preds, alpha = 0.3)+
   geom_point(aes(gdp / 1e12, value), alpha = 0.3) +
   geom_line(aes(gdp / 1e12, mu), preds) +
-  scale_x_log10() +
+  scale_x_log10(breaks = 10^(-2:1), labels = c('0.01', '0.1', '1', '10')) +
   labs(x = expression('Yearly GDP (trillion USD,'~log['10']~'scale)'),
        y = 'Number of publications') +
   theme(text = element_text(size = 13, face = 'bold'))
