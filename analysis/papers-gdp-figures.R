@@ -126,8 +126,9 @@ pivot_longer(d, c(n, n_newd)) %>%
   geom_point(aes(gdp / 1e12, value), alpha = 0.3) +
   geom_line(aes(gdp / 1e12, mu), preds) +
   scale_x_log10() +
-  labs(x = expression('Yearly GDP (trillion USD,'~log[10]~'scale)'),
-       y = 'Number of publications')
+  labs(x = expression('Yearly GDP (trillion USD,'~log['10']~'scale)'),
+       y = 'Number of publications') +
+  theme(text = element_text(size = 13, face = 'bold'))
 
 #' *figure 3*
 ggsave('figures/papers-gdp.png', width = 8, height = 4, dpi = 600)
